@@ -134,14 +134,10 @@
 
 (defun post-photo (picture text &key tags)
   (ensure-set-up)
-  (git-photo picture text :tags tags)
-  (let ((id (tumblr-photo picture text :tags tags))
-        (maxlength (- 140
-                      2 ; For the spaces in-between.
-                      (chirp:short-url-length-https (chirp:help/configuration))
-                      (chirp:characters-reserved-per-media (chirp:help/configuration)))))
-    (twitter-photo
-     picture (format NIL "~a ~apost/~a/"
-                     (limit-text text maxlength)
-                     (humbler:url humbler:*user*)
-                     id))))
+  (let* ((url (format NIL "~apost/~a/" (humbler:url humbler:*user*) (tumblr-photo picture text :tags tags)))
+         (maxlength (- 140
+                       2 ; For the spaces in-between.
+                       (chirp:short-url-length-https (chirp:help/configuration))
+                       (chirp:characters-reserved-per-media (chirp:help/configuration)))))
+    (twitter-photo picture (format NIL "~a ~a" (limit-text text maxlength) url))
+    (git-photo picture (format NIL "~a~%~a" text url) :tags tags)))
