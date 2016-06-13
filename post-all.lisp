@@ -119,6 +119,14 @@
   (format T "~&Posting ~s ~s ~s to tumblr...~%" picture text tags)
   (humbler:blog/post-photo (humbler:name humbler:*user*) picture :caption text :tags tags :tweet :off))
 
+(defun git-photo (picture text &key tags)
+  (when (legit:git-location-p
+         (uiop:pathname-directory-pathname picture))
+    (let ((repo (legit:init (uiop:pathname-directory-pathname picture))))
+      (legit:add repo picture)
+      (legit:commit (format NIL "~a~%~%Tags: ~{~a~^, ~}" tags))
+      (legit:push repo))))
+
 (defun limit-text (text length)
   (if (<= (length text) length)
       text
@@ -126,6 +134,7 @@
 
 (defun post-photo (picture text &key tags)
   (ensure-set-up)
+  (git-photo picture text :tags tags)
   (let ((id (tumblr-photo picture text :tags tags))
         (maxlength (- 140
                       2 ; For the spaces in-between.

@@ -16,4 +16,5 @@
   :serial T
   :components ((:file "post-all"))
   :depends-on (:chirp
-               :humbler))
+               :humbler
+               :legit))
