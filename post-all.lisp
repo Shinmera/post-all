@@ -124,7 +124,7 @@
          (uiop:pathname-directory-pathname picture))
     (let ((repo (legit:init (uiop:pathname-directory-pathname picture))))
       (legit:add repo picture)
-      (legit:commit (format NIL "~a~%~%Tags: ~{~a~^, ~}" tags))
+      (legit:commit repo (format NIL "~a~%~%Tags: ~{~a~^, ~}" text tags))
       (legit:push repo))))
 
 (defun limit-text (text length)
