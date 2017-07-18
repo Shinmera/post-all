@@ -23,7 +23,11 @@
    #:setup
    #:twitter-photo
    #:tumblr-photo
-   #:post-photo))
+   #:git-photo
+   #:post-photo
+   #:twitter-link
+   #:tumblr-link
+   #:post-link))
 (in-package #:post-all)
 
 (defvar *config* #p"~/.shirakumo/post-all")
@@ -108,6 +112,11 @@
   (unless humbler:*user*
     (setup)))
 
+(defun limit-text (text length)
+  (if (<= (length text) length)
+      text
+      (concatenate 'string (subseq text 0 (- length 3)) "...")))
+
 ;;;;;
 ;; Actual posting stuff
 
@@ -127,11 +136,6 @@
       (legit:commit repo (format NIL "~a~%~%Tags: ~{~a~^, ~}" text tags))
       (legit:push repo))))
 
-(defun limit-text (text length)
-  (if (<= (length text) length)
-      text
-      (concatenate 'string (subseq text 0 (- length 3)) "...")))
-
 (defun post-photo (picture text &key tags)
   (ensure-set-up)
   (let* ((url (format NIL "~apost/~a/" (humbler:url humbler:*user*) (tumblr-photo picture text :tags tags)))
@@ -141,3 +145,17 @@
                        (chirp:characters-reserved-per-media (chirp:help/configuration)))))
     (twitter-photo picture (format NIL "~a ~a" (limit-text text maxlength) url))
     (git-photo picture (format NIL "~a~%~a" text url) :tags tags)))
+
+(defun twitter-link (url text)
+  (format T "~&Posting ~s ~s to twitter...~%" url text)
+  (let ((maxlength (- 140 2 (chirp:short-url-length-https (chirp:help/configuration)))))
+    (chirp:statuses/update (format NIL "~a~%~a" (limit-text text maxlength) url))))
+
+(defun tumblr-link (url text &key tags title)
+  (format T "~&Posting ~s~@[ (~s)~] ~s ~s to tumblr...~%" url title text tags)
+  (humbler:blog/post-link (humbler:name humbler:*user*) url :description text :title title :tags tags))
+
+(defun post-link (url text &key title tags)
+  (ensure-set-up)
+  (tumblr-link url text :title title :tags tags)
+  (twitter-link url text))
